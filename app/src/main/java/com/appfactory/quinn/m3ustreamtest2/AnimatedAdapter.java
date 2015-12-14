@@ -78,7 +78,7 @@ public class AnimatedAdapter extends AnimatedExpandableListView.AnimatedExpandab
     }
 
     private void ScaleAnimation(View convertView, String childText) {
-        if(childText.compareTo("Jazz")==0){
+        if(childText.compareTo("Classical")==0){
 
 
             ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1f);
@@ -88,7 +88,7 @@ public class AnimatedAdapter extends AnimatedExpandableListView.AnimatedExpandab
 
         }
 
-        if(childText.compareTo("Rock")==0){
+        if(childText.compareTo("Jazz")==0){
 
 
             ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1f);
@@ -98,27 +98,21 @@ public class AnimatedAdapter extends AnimatedExpandableListView.AnimatedExpandab
 
         }
 
-        if(childText.compareTo("Country")==0){
+        if(childText.compareTo("Reading")==0){
 
             ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1);
             anim1.setDuration(100);
             anim1.setStartOffset(150);
             convertView.startAnimation(anim1);
         }
-        if(childText.compareTo("Indie")==0){
+        if(childText.compareTo("Sports")==0){
 
             ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1);
             anim1.setDuration(100);
             anim1.setStartOffset(250);
             convertView.startAnimation(anim1);
         }
-        if(childText.compareTo("Pop")==0){
 
-            ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1);
-            anim1.setDuration(100);
-            anim1.setStartOffset(350);
-            convertView.startAnimation(anim1);
-        }
     }
 
     @Override

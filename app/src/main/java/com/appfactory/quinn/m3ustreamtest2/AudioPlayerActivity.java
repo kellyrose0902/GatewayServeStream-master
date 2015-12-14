@@ -634,23 +634,20 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         List<AnimatedAdapter.GroupItem> items = new ArrayList<AnimatedAdapter.GroupItem>();
         AnimatedAdapter.GroupItem item = new AnimatedAdapter.GroupItem();
 
-        item.title = "Jazz";
+        item.title = "Classical";
         AnimatedAdapter.ChildItem child1 = new AnimatedAdapter.ChildItem();
-        child1.title = "Jazz";
+        child1.title = "Classical";
         item.items.add(child1);
         AnimatedAdapter.ChildItem child2 = new AnimatedAdapter.ChildItem();
-        child2.title = "Rock";
+        child2.title = "Jazz";
         item.items.add(child2);
         AnimatedAdapter.ChildItem child3 = new AnimatedAdapter.ChildItem();
-        child3.title = "Country";
+        child3.title = "Reading";
         item.items.add(child3);
         AnimatedAdapter.ChildItem child4 = new AnimatedAdapter.ChildItem();
-        child4.title = "Indie";
+        child4.title = "Sports";
         item.items.add(child4);
 
-        AnimatedAdapter.ChildItem child5 = new AnimatedAdapter.ChildItem();
-        child5.title = "Pop";
-        item.items.add(child5);
         items.add(item);
 
         return items;
