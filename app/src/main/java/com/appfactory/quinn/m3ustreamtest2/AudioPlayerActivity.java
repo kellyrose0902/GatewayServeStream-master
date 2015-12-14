@@ -16,10 +16,13 @@ import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.ScaleAnimation;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -233,19 +236,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
             mCurrentIndex = lastIndex;
         }
     }
-    private void prepareDataList(){
-        listDataHeader = new ArrayList<String>();
-        listDataChild = new HashMap<String,List<String>>();
 
-        listDataHeader.add("Jazz");
-        musicType.add("Jazz");
-        musicType.add("Pop");
-        musicType.add("Country");
-        musicType.add("Metal");
-        musicType.add("Rap");
-
-        listDataChild.put(listDataHeader.get(0), musicType);
-    }
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -474,7 +465,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
             Toast.makeText(getApplicationContext(), String.format("%s", mStations[mCurrentIndex].getSource()), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
-
+        
         player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
@@ -530,7 +521,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         audioOutput.setEnabled(true);
     }
     private void setupDropdown() {
-        List<AnimatedAdapter.GroupItem> items = getDropdownData();
+        List<GroupItem> items = getDropdownData();
         adapter = new AnimatedAdapter(this);
         adapter.setData(items);
         listView = (AnimatedExpandableListView) findViewById(R.id.Elist);
@@ -601,7 +592,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 if(isClick){
                     isClick = false;
                     TextView childtv = (TextView) v.findViewById(R.id.list_item_text);
-                    AnimatedAdapter.GroupItem currentGroup = adapter.items.get(0);
+                    GroupItem currentGroup = adapter.items.get(0);
                     currentGroup.title = childtv.getText().toString();
                     adapter.items.set(0, currentGroup);
 
@@ -615,12 +606,34 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     });
 
 
+
+                    if(currentGroup.title.compareTo("Classical")==0){
+                        mCurrentIndex = 0;
+                    }
+                    else if (currentGroup.title.compareTo("Jazz")==0){
+                        mCurrentIndex = 1;
+                    }
+                    else if (currentGroup.title.compareTo("Reading")==0){
+                        mCurrentIndex = 2;
+                    }
+                    else if (currentGroup.title.compareTo("Sport")==0){
+                        mCurrentIndex = 3;
+                    }
+
+
+
+                    setupPlayer();
+                    updateViews();
+
+
                 }
 
                 View group = adapter.getGroupView(listView,groupPosition);
                 ImageView indicator = (ImageView)group.findViewById(R.id.indicator);
                 Animation rotate = AnimationUtils.loadAnimation(getBaseContext(), R.anim.reverse_rotate_indicator);
                 indicator.startAnimation(rotate);
+
+
 
                 listView.collapseGroupWithAnimation(groupPosition);
 
@@ -630,21 +643,21 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         };
     }
     @NonNull
-    private List<AnimatedAdapter.GroupItem> getDropdownData() {
-        List<AnimatedAdapter.GroupItem> items = new ArrayList<AnimatedAdapter.GroupItem>();
-        AnimatedAdapter.GroupItem item = new AnimatedAdapter.GroupItem();
+    private List<GroupItem> getDropdownData() {
+        List<GroupItem> items = new ArrayList<GroupItem>();
+        GroupItem item = new GroupItem();
 
         item.title = "Classical";
-        AnimatedAdapter.ChildItem child1 = new AnimatedAdapter.ChildItem();
+        ChildItem child1 = new ChildItem();
         child1.title = "Classical";
         item.items.add(child1);
-        AnimatedAdapter.ChildItem child2 = new AnimatedAdapter.ChildItem();
+        ChildItem child2 = new ChildItem();
         child2.title = "Jazz";
         item.items.add(child2);
-        AnimatedAdapter.ChildItem child3 = new AnimatedAdapter.ChildItem();
+        ChildItem child3 = new ChildItem();
         child3.title = "Reading";
         item.items.add(child3);
-        AnimatedAdapter.ChildItem child4 = new AnimatedAdapter.ChildItem();
+        ChildItem child4 = new ChildItem();
         child4.title = "Sports";
         item.items.add(child4);
 
@@ -652,7 +665,159 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
         return items;
     }
+
+    public static class GroupItem {
+        String title;
+        List<ChildItem> items = new ArrayList<ChildItem>();
+    }
+
+    public static class ChildItem {
+        String title;
+
+    }
+
+    public static class ChildHolder {
+        TextView title;
+
+    }
+
+    public static class GroupHolder {
+        TextView title;
+    }
     public Context getContext(){
         return this.getBaseContext();
+    }
+
+    private class AnimatedAdapter extends AnimatedExpandableListView.AnimatedExpandableListAdapter {
+        private LayoutInflater inflater;
+
+
+        public List<GroupItem> items;
+
+        public AnimatedAdapter(Context context) {
+            inflater = LayoutInflater.from(context);
+        }
+
+        public void setData(List<GroupItem> items) {
+            this.items = items;
+        }
+
+        @Override
+        public ChildItem getChild(int groupPosition, int childPosition) {
+            return items.get(groupPosition).items.get(childPosition);
+        }
+
+        @Override
+        public long getChildId(int groupPosition, int childPosition) {
+            return childPosition;
+        }
+
+        @Override
+        public View getRealChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+            ChildHolder holder;
+            ChildItem item = getChild(groupPosition, childPosition);
+            if (convertView == null) {
+                holder = new ChildHolder();
+                convertView = inflater.inflate(R.layout.list_item, parent, false);
+                holder.title = (TextView) convertView.findViewById(R.id.list_item_text);
+
+                convertView.setTag(holder);
+            } else {
+                holder = (ChildHolder) convertView.getTag();
+            }
+
+            holder.title.setText(item.title);
+
+            ScaleAnimation(convertView, item.title);
+            return convertView;
+        }
+
+        private void ScaleAnimation(View convertView, String childText) {
+            if(childText.compareTo("Classical")==0){
+
+
+                ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1f);
+                anim1.setDuration(100);
+                convertView.startAnimation(anim1);
+
+
+            }
+
+            if(childText.compareTo("Jazz")==0){
+
+
+                ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1f);
+                anim1.setDuration(100);
+                anim1.setStartOffset(50);
+                convertView.startAnimation(anim1);
+
+            }
+
+            if(childText.compareTo("Reading")==0){
+
+                ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1);
+                anim1.setDuration(100);
+                anim1.setStartOffset(150);
+                convertView.startAnimation(anim1);
+            }
+            if(childText.compareTo("Sports")==0){
+
+                ScaleAnimation anim1 = new ScaleAnimation(1, 1, 0, 1);
+                anim1.setDuration(100);
+                anim1.setStartOffset(250);
+                convertView.startAnimation(anim1);
+            }
+
+        }
+
+        @Override
+        public int getRealChildrenCount(int groupPosition) {
+            return items.get(groupPosition).items.size();
+        }
+
+        @Override
+        public GroupItem getGroup(int groupPosition) {
+            return items.get(groupPosition);
+        }
+
+        @Override
+        public int getGroupCount() {
+            return items.size();
+        }
+
+        @Override
+        public long getGroupId(int groupPosition) {
+            return groupPosition;
+        }
+
+        @Override
+        public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+            GroupHolder holder;
+            GroupItem item = getGroup(groupPosition);
+            if (convertView == null) {
+                holder = new GroupHolder();
+                convertView = inflater.inflate(R.layout.group_item, parent, false);
+                holder.title = (TextView) convertView.findViewById(R.id.listHeader);
+                convertView.setTag(holder);
+            } else {
+                holder = (GroupHolder) convertView.getTag();
+            }
+
+            holder.title.setText(item.title);
+
+
+            return convertView;
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return true;
+        }
+
+        @Override
+        public boolean isChildSelectable(int arg0, int arg1) {
+            return true;
+        }
+
     }
 }
