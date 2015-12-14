@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">M3uStreamTest2</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="fm91Point1">91.1 FM</string>
+    <string name="jazzText">Jazz Radio</string>
+    <string name="communityText">Community Radio</string>
+    <string name="stop_button_text">Stop</string>
+    <string name="play_button_text">Play</string>
+    <string name="sports_radio_button">Sports Radio</string>
+    <string name="application_name">WGTD</string>
+    <string name="jazz_station_string">Jazz</string>
+    <string name="sports_station_string">Sports</string>
+    <string name="reading_service_string">Reading</string>
+    <string name="community_station_string">Community </string>
+    <string name="public_radio_string">Public</string>
+    <string name="blank_space_string">warning_text_view</string>
+    <string name="blank_place_holder"/>
+    <string name="tintColor">B62455</string>
+
+    <string name="undo">Undo</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
