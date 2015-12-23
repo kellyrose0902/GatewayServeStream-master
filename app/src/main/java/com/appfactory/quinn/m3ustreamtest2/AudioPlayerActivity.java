@@ -38,7 +38,6 @@ import com.google.android.gms.analytics.Tracker;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -56,6 +55,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public String apiKey;
     public ArrayList<Bitmap> bannersAds;
 
+
     private AnimatedExpandableListView listView;
     private AnimatedAdapter adapter;
     private View dim_layer;
@@ -66,12 +66,6 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public ImageButton mStartStopButton;
     private ImageButton mPrevButton;
     private ImageButton mNextButton;
-
-
-    ExpandableListView expListView;
-    List<String> listDataHeader;
-    HashMap<String, List<String>> listDataChild;
-    List<String> musicType = new ArrayList<>();
 
     private ImageView currentStationBanner;
     public GFMinimalNotification notification;
@@ -141,6 +135,17 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
         editor.putInt("Last Channel", mCurrentIndex);
         editor.commit();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(player!=null && player.isPlaying()){
+            player.stop();
+            player.release();
+        }
+        player =null;
+
     }
 
     public void setupGoogleAnalytics()
@@ -259,6 +264,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         doneBuffering = false;
 
         setLastChannelIndex();
+        //player = new MediaPlayer();
         setupPlayer();
 
         setContentView(R.layout.main_act_layout);
@@ -277,32 +283,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         mStartStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (playPressed) {
-
-                    if (player.isPlaying()) {
-                        player.stop();
-                    }
-
-                    mStartStopButton.setImageDrawable(playDrawable());
-                    doneBuffering = false;
-
-                    if (notification != null) {
-                        notification.dismiss();
-                    }
-                } else {
-                    setupPlayer();
-                    new ConnectionTest(getApplicationContext(), mActivity, true).execute();
-
-                    mStartStopButton.setImageDrawable(pauseDrawable());
-
-                    if (notification != null) {
-                        notification.dismiss();
-                    }
-                    notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
-                            0);
-                    notification.show(mActivity);
-                }
-                playPressed = !playPressed;
+                clickPlayButton();
             }
         });
 
@@ -315,15 +296,20 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                 mStartStopButton.setImageDrawable(playDrawable());
 
+                updateDropdownHeader(mCurrentIndex);
+
+
                 playPressed = false;
                 doneBuffering = false;
 
                 if (player.isPlaying()) {
                     player.stop();
                 }
+                player.release();
 
                 setupPlayer();
                 updateViews();
+                clickPlayButton();
             }
         });
 
@@ -335,16 +321,17 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                 mCurrentIndex = ((mCurrentIndex - 1) + mStations.length) % mStations.length;
                 mStartStopButton.setImageDrawable(playDrawable());
-
+                updateDropdownHeader(mCurrentIndex);
                 playPressed = false;
                 doneBuffering = false;
 
                 if (player.isPlaying()) {
                     player.stop();
                 }
-
+                player.release();
                 setupPlayer();
                 updateViews();
+                mStartStopButton.performClick();
             }
         });
 
@@ -359,6 +346,56 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         setupBannerTimer();
 
 
+    }
+
+    private void clickPlayButton() {
+        mStartStopButton.setImageDrawable(playDrawable());
+
+        if (playPressed) {
+            if (player != null) {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+            }
+            doneBuffering = false;
+
+            if (notification != null) {
+                notification.dismiss();
+            }
+        } else {
+            setupPlayer();
+            new ConnectionTest(getApplicationContext(), mActivity, true).execute();
+
+            mStartStopButton.setImageDrawable(pauseDrawable());
+
+            if (notification != null) {
+                notification.dismiss();
+            }
+            notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
+                    0);
+            notification.show(mActivity);
+        }
+        playPressed = !playPressed;
+    }
+
+    private void updateDropdownHeader(int mCurrentIndex) {
+        GroupItem currentGroup = adapter.items.get(0);
+        switch (mCurrentIndex){
+            case 0:
+                currentGroup.title = "Classical";
+                break;
+            case 1:
+                currentGroup.title = "Jazz";
+                break;
+            case 2:
+                currentGroup.title = "Reading";
+                break;
+            case 3:
+                currentGroup.title = "Sports";
+                break;
+        }
+        adapter.items.set(0, currentGroup);
+        adapter.notifyDataSetChanged();
     }
 
     private Drawable resize(Drawable image, int size) {
@@ -458,14 +495,16 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public void setupPlayer()
     {
         player = new MediaPlayer();
+        player.reset();
         try
         {
             player.setDataSource(mStations[mCurrentIndex].getSource());
+
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), String.format("%s", mStations[mCurrentIndex].getSource()), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
-        
+
         player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
@@ -529,6 +568,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         // In order to show animations, we need to use a custom click handler
         // for our ExpandableListView.
         listView.setOnGroupClickListener(getGroupListener());
+        updateDropdownHeader(mCurrentIndex);
 
     }
     public ExpandableListView.OnGroupClickListener getGroupListener(){
@@ -616,14 +656,17 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     else if (currentGroup.title.compareTo("Reading")==0){
                         mCurrentIndex = 2;
                     }
-                    else if (currentGroup.title.compareTo("Sport")==0){
+                    else if (currentGroup.title.compareTo("Sports")==0){
                         mCurrentIndex = 3;
                     }
 
-
-
-                    setupPlayer();
+                    playPressed = true;
+                    clickPlayButton();
+                    player.release();
+                    playPressed = false;
+                    clickPlayButton();
                     updateViews();
+
 
 
                 }
