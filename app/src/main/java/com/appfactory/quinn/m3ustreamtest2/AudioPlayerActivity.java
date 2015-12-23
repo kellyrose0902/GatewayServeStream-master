@@ -61,6 +61,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     private View dim_layer;
     private ImageView indicator;
     private boolean isClick = true;
+    private boolean isPlayClick = true;
 
     public MediaPlayer player;
     public ImageButton mStartStopButton;
@@ -301,11 +302,13 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                 playPressed = false;
                 doneBuffering = false;
-
-                if (player.isPlaying()) {
-                    player.stop();
+                if(player!=null){
+                    if (player.isPlaying()) {
+                        player.stop();
+                    }
+                    player.release();
                 }
-                player.release();
+
 
                 setupPlayer();
                 updateViews();
@@ -324,11 +327,13 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 updateDropdownHeader(mCurrentIndex);
                 playPressed = false;
                 doneBuffering = false;
-
-                if (player.isPlaying()) {
-                    player.stop();
+                if(player!=null){
+                    if (player.isPlaying()) {
+                        player.stop();
+                    }
+                    player.release();
                 }
-                player.release();
+
                 setupPlayer();
                 updateViews();
                 mStartStopButton.performClick();
@@ -349,33 +354,37 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     }
 
     private void clickPlayButton() {
-        mStartStopButton.setImageDrawable(playDrawable());
 
-        if (playPressed) {
-            if (player != null) {
-                if (player.isPlaying()) {
-                    player.stop();
+            if (playPressed) {
+                mStartStopButton.setImageDrawable(playDrawable());
+
+                if (player != null) {
+                    if (player.isPlaying()) {
+                        player.stop();
+
+                    }
+                    player.release();
                 }
-            }
-            doneBuffering = false;
+                doneBuffering = false;
+                if (notification != null) {
+                    notification.dismiss();
+                }
+            } else {
+                setupPlayer();
+                new ConnectionTest(getApplicationContext(), mActivity, true).execute();
 
-            if (notification != null) {
-                notification.dismiss();
-            }
-        } else {
-            setupPlayer();
-            new ConnectionTest(getApplicationContext(), mActivity, true).execute();
+                mStartStopButton.setImageDrawable(pauseDrawable());
 
-            mStartStopButton.setImageDrawable(pauseDrawable());
-
-            if (notification != null) {
-                notification.dismiss();
+                if (notification != null) {
+                    notification.dismiss();
+                }
+                notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
+                        0);
+                notification.show(mActivity);
             }
-            notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
-                    0);
-            notification.show(mActivity);
-        }
-        playPressed = !playPressed;
+            playPressed = !playPressed;
+
+
     }
 
     private void updateDropdownHeader(int mCurrentIndex) {
