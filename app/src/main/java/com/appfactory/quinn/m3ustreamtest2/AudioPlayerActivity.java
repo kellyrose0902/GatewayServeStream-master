@@ -310,10 +310,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 if(playPressed){
                     clickPlayButton();
                 }
-
-                doneBuffering = false;
-                updateViews();
                 clickPlayButton();
+                updateViews();
             }
         });
 
@@ -329,11 +327,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 if(playPressed){
                     clickPlayButton();
                 }
-
-                doneBuffering = false;
-                updateViews();
-                playPressed = false;
                 clickPlayButton();
+                updateViews();
             }
         });
 
@@ -367,6 +362,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     notification.dismiss();
                 }
             } else {
+
+
                 setupPlayer();
                 new ConnectionTest(getApplicationContext(), mActivity, true).execute();
 
@@ -695,23 +692,19 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                         mCurrentIndex = 3;
                     }
 
-                    playPressed = true;
-                    clickPlayButton();
-                    player.release();
-                    playPressed = false;
+
+                    if(playPressed){
+                        clickPlayButton();
+                    }
                     clickPlayButton();
                     updateViews();
-
-
-
+                    isClick =true;
                 }
 
                 View group = adapter.getGroupView(listView,groupPosition);
                 ImageView indicator = (ImageView)group.findViewById(R.id.indicator);
                 Animation rotate = AnimationUtils.loadAnimation(getBaseContext(), R.anim.reverse_rotate_indicator);
                 indicator.startAnimation(rotate);
-
-
 
                 listView.collapseGroupWithAnimation(groupPosition);
 
