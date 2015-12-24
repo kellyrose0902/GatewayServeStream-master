@@ -120,8 +120,14 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         super.onBackPressed();
         timer.cancel();
         timer = null;
-        player.stop();
-        System.exit(0);
+        if(player!=null){
+            if(player.isPlaying()){
+                player.stop();
+            }
+            player.release();
+        }
+
+        finish();
     }
 
     @Override
@@ -299,23 +305,13 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mStations.length;
-
                 mStartStopButton.setImageDrawable(playDrawable());
-
                 updateDropdownHeader(mCurrentIndex);
-
-
-                playPressed = false;
-                doneBuffering = false;
-                if(player!=null){
-                    if (player.isPlaying()) {
-                        player.stop();
-                    }
-                    player.release();
+                if(playPressed){
+                    clickPlayButton();
                 }
 
-
-                setupPlayer();
+                doneBuffering = false;
                 updateViews();
                 clickPlayButton();
             }
@@ -330,17 +326,13 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 mCurrentIndex = ((mCurrentIndex - 1) + mStations.length) % mStations.length;
                 mStartStopButton.setImageDrawable(playDrawable());
                 updateDropdownHeader(mCurrentIndex);
-                playPressed = false;
-                doneBuffering = false;
-                if(player!=null){
-                    if (player.isPlaying()) {
-                        player.stop();
-                    }
-                    player.release();
+                if(playPressed){
+                    clickPlayButton();
                 }
 
-                setupPlayer();
+                doneBuffering = false;
                 updateViews();
+                playPressed = false;
                 clickPlayButton();
             }
         });
@@ -580,12 +572,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                         intensity = ((float) waveform[0] + 128f) / 256;
 
                     }
-                    if(intensity == 100f){
-                        Log.i("IntensityLevel", "=============");
-                        for(Integer x : waveData){
-                            Log.i("IntensityLevel","count = "+count+"---"+String.valueOf(x.intValue())+"----"+waveform[0]);
-                        }
-                    }
+
                     addQueue(waveform[0]);
 
                 }
@@ -594,6 +581,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     intensity = 100f;
 
                 }
+                Log.i("Wave intensity",String.valueOf(waveform[0]));
 
 
 
