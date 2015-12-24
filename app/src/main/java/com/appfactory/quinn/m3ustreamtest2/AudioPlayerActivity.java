@@ -15,6 +15,7 @@ import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,7 +39,9 @@ import com.google.android.gms.analytics.Tracker;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -54,8 +57,9 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public static AudioPlayerActivity mActivity;
     public String apiKey;
     public ArrayList<Bitmap> bannersAds;
-
-
+    Queue<Integer> waveData;
+    int maxQueue = 0;
+    boolean isPlaying = false;
     private AnimatedExpandableListView listView;
     private AnimatedAdapter adapter;
     private View dim_layer;
@@ -67,6 +71,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public ImageButton mStartStopButton;
     private ImageButton mPrevButton;
     private ImageButton mNextButton;
+    public int previousWave = 128;
 
     private ImageView currentStationBanner;
     public GFMinimalNotification notification;
@@ -254,7 +259,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         new Networking.GetBannerAds(this).execute();
 
         // Sets up the navigation bar
-
+        waveData = new LinkedList<Integer>();
 
         setupRecorder();
         createVisualizer();
@@ -336,7 +341,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                 setupPlayer();
                 updateViews();
-                mStartStopButton.performClick();
+                clickPlayButton();
             }
         });
 
@@ -522,6 +527,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 }
 
                 if (playPressed) {
+
                     notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.SUCCESS, "", "Your station is playing!");
                     notification.show(mActivity);
 
@@ -558,7 +564,39 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         audioOutput.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
             @Override
             public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
-                intensity = ((float) waveform[0] + 128f) / 256;
+
+                if(maxQueue == 10){
+
+                    int count = 0;
+                    for(Integer x : waveData){
+                        if (Math.abs((float)x.intValue())>125){
+                            count += 1;
+                        }
+                    }
+                    if(count > 5){
+                        intensity = 100f;
+                    }
+                    else {
+                        intensity = ((float) waveform[0] + 128f) / 256;
+
+                    }
+                    if(intensity == 100f){
+                        Log.i("IntensityLevel", "=============");
+                        for(Integer x : waveData){
+                            Log.i("IntensityLevel","count = "+count+"---"+String.valueOf(x.intValue())+"----"+waveform[0]);
+                        }
+                    }
+                    addQueue(waveform[0]);
+
+                }
+                else {
+                    addQueue(waveform[0]);
+                    intensity = 100f;
+
+                }
+
+
+
             }
 
             @Override
@@ -869,6 +907,18 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         @Override
         public boolean isChildSelectable(int arg0, int arg1) {
             return true;
+        }
+
+    }
+
+    public void addQueue(int x){
+        if(maxQueue<10){
+            waveData.add(new Integer(x));
+            maxQueue += 1;
+        }
+        else{
+            waveData.poll();
+            waveData.add(new Integer(x));
         }
 
     }

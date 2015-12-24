@@ -64,8 +64,10 @@ public class WaveFragment extends Fragment {
                             if (parent.intensity == 0.103975) {
 
                             }
-
-                            if (parent.intensity < 0.001) {
+                            if(parent.intensity == 100f){
+                                line.updateWaveWithLevel(0.01);
+                            }
+                             else if (parent.intensity < 0.001) {
                                 line.updateWaveWithLevel(0.1);
                             } else if (parent.intensity < 0.5) {
                                 line.updateWaveWithLevel(0.5);
