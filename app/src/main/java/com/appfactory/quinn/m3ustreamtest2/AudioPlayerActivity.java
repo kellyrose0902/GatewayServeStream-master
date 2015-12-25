@@ -120,20 +120,18 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         super.onBackPressed();
         timer.cancel();
         timer = null;
-        if(player!=null){
-            if(player.isPlaying()){
-                player.stop();
-            }
-            player.release();
+        if(playPressed){
+            clickPlayButton();
         }
 
-        finish();
+        System.exit(0);
     }
 
     @Override
     public void onResume()
     {
         super.onResume();
+
         if(timer == null)
         {
             timer.scheduleAtFixedRate(task, 0, 10);
@@ -143,20 +141,21 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     @Override
     public void onPause()
     {
-        super.onPause();
         SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
         editor.putInt("Last Channel", mCurrentIndex);
         editor.commit();
+        super.onPause();
+
     }
 
     @Override
     protected void onStop() {
-        super.onStop();
-        if(player!=null && player.isPlaying()){
-            player.stop();
-            player.release();
+
+        if(playPressed){
+            clickPlayButton();
         }
-        player =null;
+
+        super.onStop();
 
     }
 
@@ -282,8 +281,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         setContentView(R.layout.main_act_layout);
 
         setupDropdown();
-        dim_layer = findViewById(R.id.dim);
-        dim_layer.setAlpha(0f);
+
 
         currentStationBanner = (ImageView)findViewById(R.id.current_station_banner);
         bannerView = (ImageView)findViewById(R.id.bannerView);
@@ -498,10 +496,11 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public void setupPlayer()
     {
         player = new MediaPlayer();
-        player.reset();
+
         try
         {
             player.setDataSource(mStations[mCurrentIndex].getSource());
+
 
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), String.format("%s", mStations[mCurrentIndex].getSource()), Toast.LENGTH_SHORT).show();
@@ -537,11 +536,11 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
             }
             notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.ERROR, "", "There was an error!");
             notification.show(mActivity);
+            //pause
+            clickPlayButton();
+            //replay
+            clickPlayButton();
 
-            doneBuffering = false;
-
-            setupPlayer();
-            player.prepareAsync();
         }
 
         return true;
@@ -592,6 +591,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         audioOutput.setEnabled(true);
     }
     private void setupDropdown() {
+        dim_layer = findViewById(R.id.dim);
+        dim_layer.setAlpha(0f);
         List<GroupItem> items = getDropdownData();
         adapter = new AnimatedAdapter(this);
         adapter.setData(items);
@@ -698,7 +699,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     }
                     clickPlayButton();
                     updateViews();
-                    isClick =true;
+
                 }
 
                 View group = adapter.getGroupView(listView,groupPosition);
