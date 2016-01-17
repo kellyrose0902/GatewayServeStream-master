@@ -21,8 +21,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
@@ -624,8 +622,9 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                         }
                     });
 
-                    Animation rotate = AnimationUtils.loadAnimation(getBaseContext(), R.anim.reverse_rotate_indicator);
-                    indicator.startAnimation(rotate);
+                    indicator.setRotation(180);
+                    indicator.animate().rotation(360).setDuration(200);
+
                     listView.collapseGroupWithAnimation(groupPosition);
 
 
@@ -640,10 +639,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     });
 
 
-                    Animation rotate = AnimationUtils.loadAnimation(getBaseContext(), R.anim.rotate_indicator);
-                    rotate.setFillAfter(true);
-                    indicator.startAnimation(rotate);
-
+                    indicator.setRotation(0);
+                    indicator.animate().rotation(180).setDuration(200);
                     listView.expandGroupWithAnimation(groupPosition);
 
 
@@ -697,15 +694,15 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                     if(playPressed){
                         clickPlayButton();
                     }
-                    clickPlayButton();
+
                     updateViews();
 
                 }
 
                 View group = adapter.getGroupView(listView,groupPosition);
                 ImageView indicator = (ImageView)group.findViewById(R.id.indicator);
-                Animation rotate = AnimationUtils.loadAnimation(getBaseContext(), R.anim.reverse_rotate_indicator);
-                indicator.startAnimation(rotate);
+                indicator.setRotation(180);
+                indicator.animate().rotation(360).setDuration(200);
 
                 listView.collapseGroupWithAnimation(groupPosition);
 
