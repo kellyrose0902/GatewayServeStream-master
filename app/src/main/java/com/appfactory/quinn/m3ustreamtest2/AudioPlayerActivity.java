@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.animation.ScaleAnimation;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
@@ -149,9 +150,9 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     @Override
     protected void onStop() {
 
-        if(playPressed){
-            clickPlayButton();
-        }
+//        if(playPressed){
+//            clickPlayButton();
+//        }
 
         super.onStop();
 
@@ -179,10 +180,10 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                       if(mActivity.playPressed)
-                       {
-                           new ConnectionTest(getApplicationContext(), mActivity, false).execute();
-                       }
+                        if(mActivity.playPressed)
+                        {
+                            new ConnectionTest(getApplicationContext(), mActivity, false).execute();
+                        }
                     }
                 });
             }
@@ -256,6 +257,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //fix power saving bug
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setupGoogleAnalytics();
         this.bannersAds = new ArrayList<>();
 
@@ -265,7 +268,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         waveData = new LinkedList<Integer>();
 
         setupRecorder();
-        createVisualizer();
+        //createVisualizer();
 
         mContext = this;
         mActivity = this;
@@ -343,36 +346,36 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
     private void clickPlayButton() {
 
-            if (playPressed) {
-                mStartStopButton.setImageDrawable(playDrawable());
+        if (playPressed) {
+            mStartStopButton.setImageDrawable(playDrawable());
 
-                if (player != null) {
-                    if (player.isPlaying()) {
-                        player.stop();
+            if (player != null) {
+                if (player.isPlaying()) {
+                    player.stop();
 
-                    }
-                    player.release();
                 }
-                doneBuffering = false;
-                if (notification != null) {
-                    notification.dismiss();
-                }
-            } else {
-
-
-                setupPlayer();
-                new ConnectionTest(getApplicationContext(), mActivity, true).execute();
-
-                mStartStopButton.setImageDrawable(pauseDrawable());
-
-                if (notification != null) {
-                    notification.dismiss();
-                }
-                notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
-                        0);
-                notification.show(mActivity);
+                player.release();
             }
-            playPressed = !playPressed;
+            doneBuffering = false;
+            if (notification != null) {
+                notification.dismiss();
+            }
+        } else {
+
+
+            setupPlayer();
+            new ConnectionTest(getApplicationContext(), mActivity, true).execute();
+
+            mStartStopButton.setImageDrawable(pauseDrawable());
+
+            if (notification != null) {
+                notification.dismiss();
+            }
+            notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.WARNING, "", "Your stream is loading....",
+                    0);
+            notification.show(mActivity);
+        }
+        playPressed = !playPressed;
 
 
     }
@@ -494,6 +497,8 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public void setupPlayer()
     {
         player = new MediaPlayer();
+        createVisualizer();
+
 
         try
         {
@@ -514,8 +519,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                 if (playPressed) {
 
-                    notification = new GFMinimalNotification(mActivity, GFMinimalNotificationStyle.SUCCESS, "", "Your station is playing!");
-                    notification.show(mActivity);
+
 
                     player.start();
                     doneBuffering = true;
@@ -546,7 +550,11 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
     private void createVisualizer(){
         int rate = Visualizer.getMaxCaptureRate();
-        audioOutput = new Visualizer(0); // get output audio stream
+
+        if(audioOutput!=null){
+            audioOutput.release();
+        }
+        audioOutput = new Visualizer(player.getAudioSessionId()); // get output audio stream
         audioOutput.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
             @Override
             public void onWaveFormDataCapture(Visualizer visualizer, byte[] waveform, int samplingRate) {
@@ -555,11 +563,11 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
 
                     int count = 0;
                     for(Integer x : waveData){
-                        if (Math.abs((float)x.intValue())>125){
+                        if (Math.abs((float)x.intValue())>124){
                             count += 1;
                         }
                     }
-                    if(count > 5){
+                    if(count > 4){
                         intensity = 100f;
                     }
                     else {
@@ -900,5 +908,16 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
             waveData.add(new Integer(x));
         }
 
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        if(player!= null){
+            if(player.isPlaying()){
+                player.stop();
+            }
+            player.release();
+        }
     }
 }
