@@ -258,7 +258,7 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         super.onCreate(savedInstanceState);
 
         //fix power saving bug
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setupGoogleAnalytics();
         this.bannersAds = new ArrayList<>();
 
