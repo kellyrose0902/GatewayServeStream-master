@@ -3,6 +3,7 @@ package com.appfactory.quinn.m3ustreamtest2;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -15,6 +16,8 @@ import android.media.MediaRecorder;
 import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -52,6 +55,7 @@ import java.util.TimerTask;
  * http://media.gtc.edu:8000/stream.m3u     Public Radio HD1
  */
 public class AudioPlayerActivity extends BaseNotificationActivity implements MediaPlayer.OnErrorListener {
+    PhoneStateListener phoneStateListener;
     public static Context mContext;
     public static AudioPlayerActivity mActivity;
     public String apiKey;
@@ -257,8 +261,6 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //fix power saving bug
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setupGoogleAnalytics();
         this.bannersAds = new ArrayList<>();
 
@@ -268,15 +270,13 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
         waveData = new LinkedList<Integer>();
 
         setupRecorder();
-        //createVisualizer();
-
         mContext = this;
         mActivity = this;
         playPressed = false;
         doneBuffering = false;
 
         setLastChannelIndex();
-        //player = new MediaPlayer();
+
         setupPlayer();
 
         setContentView(R.layout.main_act_layout);
@@ -330,6 +330,28 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 updateViews();
             }
         });
+
+        PhoneStateListener phoneStateListener = new PhoneStateListener() {
+            @Override
+            public void onCallStateChanged(int state, String incomingNumber) {
+                if (state == TelephonyManager.CALL_STATE_RINGING) {
+                    //Incoming call: Pause music
+                    if(playPressed){
+                        clickPlayButton();
+                    }
+                } else if(state == TelephonyManager.CALL_STATE_IDLE) {
+                    clickPlayButton();
+
+                } else if(state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                    //A call is dialing, active or on hold
+                }
+                super.onCallStateChanged(state, incomingNumber);
+            }
+        };
+        TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if(mgr != null) {
+            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
 
         WaveFragment frag = new WaveFragment();
         frag.parent = this;
@@ -918,6 +940,10 @@ public class AudioPlayerActivity extends BaseNotificationActivity implements Med
                 player.stop();
             }
             player.release();
+        }
+        TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if(mgr != null) {
+            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
         }
     }
 }
